@@ -89,21 +89,6 @@ export abstract class BaseUrlProcessor<T extends BaseAdFetcher>  {
 		};
 	}
 
-	//todo prob that better put into instances?  not in base class cuz there are realisation?
-	protected formatPriceChange(change: PriceChange): string {
-		const emoji = change.isIncrease ? '🔺' : '🔰';
-		const sign = change.isIncrease ? '+' : '';
-		
-		const formatChange = (value: number, currency: string) => 
-		  value !== 0 ? `${sign}${value.toFixed(2)} ${currency}` : '';
-	
-		const bynChange = formatChange(change.changeBYN, 'BYN');
-		const usdChange = formatChange(change.changeUSD, 'USD');
-	
-		return `Старая цена: ${change.oldPriceBYN}руб.  ${change.oldPriceUSD}$\n` +
-			   `Изменение: ${bynChange} ${usdChange}`;
-	  }
-
 	private async notifyTelegram(ad: IAd, priceChange?: PriceChange): Promise<void> {
 		const text = await this.formatAdMessage(ad, priceChange);
 		const messageContent: MessageContent = { text };

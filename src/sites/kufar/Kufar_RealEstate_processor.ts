@@ -50,7 +50,20 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<Kufar_RealEst
 		const priceChangeInfo = this.formatPriceChange(priceChange);
 		return `${format.underline('сменилась цена')} ${emoji}\n${format.blockquote(priceChangeInfo)}`;
 	}
+	protected formatPriceChange(change: PriceChange): string {
+		const emoji = change.isIncrease ? '🔺' : '🔰';
+		const sign = change.isIncrease ? '+' : '';
+		
+		const formatPrice = (value: number) => Math.round(value).toLocaleString('ru-RU');
+		const formatChange = (value: number, currency: string) => 
+		  value !== 0 ? `${sign}${formatPrice(value)} ${currency}` : '';
 
+		const bynChange = formatChange(change.changeBYN, 'BYN');
+		const usdChange = formatChange(change.changeUSD, 'USD');
+	
+		return `Старая цена: ${formatPrice(change.oldPriceBYN)}руб.  ${formatPrice(change.oldPriceUSD)}$\n` +
+			   `Изменение: ${bynChange} ${usdChange}`;
+	}
 	private async getFullDescription(ad: IAdRealEstate): Promise<string> {
 		if (ad.description_full) return ad.description_full;
 
@@ -68,7 +81,7 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<Kufar_RealEst
 	private getFormatingTexts(ad: IAdRealEstate) {
 		const { adress, price_byn, price_usd, condition, flat_repair, floor, floor_total, room_count, size, who_can_rent } = ad
 
-		let price_text = price_byn + 'руб.' + ' ' + price_usd + '$'
+		let price_text = Math.round(+price_byn) + 'руб.' + ' ' +  Math.round(+price_usd) + '$'
 		if (!+price_byn && !+price_usd) {
 			price_text = 'договорная цена'
 		}

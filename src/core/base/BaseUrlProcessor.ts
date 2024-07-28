@@ -47,7 +47,6 @@ export abstract class BaseUrlProcessor<T extends BaseAdFetcher>  {
 			if (this.urlConfig.onlyWithPhoto && ad.images.length === 0) {
 				return;
 			}
-
 			const existingAd = await this.db.getAd(ad.id);
 			const priceChange = this.calculatePriceChange(ad, existingAd);
 			if (priceChange) {
@@ -60,7 +59,9 @@ export abstract class BaseUrlProcessor<T extends BaseAdFetcher>  {
 				await this.db.saveAd(ad);
 			}
 		} catch (error) {
-			this.logger.error(`Error processing ad ${ad.link} for ${this.urlConfig.url}`, this.urlConfig, error);
+			this.logger.error(`Error processing ad ${ad.link}`, this.urlConfig, error);
+			//@ts-ignore
+			this.telegramService.sendError(`Error processing ad ${ad.link} ${error.message}`)
 		}
 	}
 

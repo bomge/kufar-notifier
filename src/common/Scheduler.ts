@@ -6,15 +6,29 @@ import type { IDatabase } from "../core/interfaces/IDatabase";
 import type { ILogger } from "../core/interfaces/ILogger";
 import { Queue, type QueueOptions } from "./Queue";
 import type { TelegramService } from "./Telegram";
+import type { IAd } from "../core/interfaces/IAd";
 
 // Define the types for the fetcher and processor classes
-type ConstructorFetcherType = new (...args: ConstructorParameters<typeof BaseAdFetcher>) => BaseAdFetcher;
-type ConstructorProcessorType = new (...args: any[]) => BaseUrlProcessor<BaseAdFetcher>
+// type ConstructorFetcherType = new (...args: ConstructorParameters<typeof BaseAdFetcher>) => BaseAdFetcher;
+// type ConstructorProcessorType = new (...args: any[]) => BaseUrlProcessor<BaseAdFetcher>
 
-class Scheduler extends EventEmitter {
+type ConstructorFetcherType<T extends IAd, R, RawAdType> = new (
+    logger: ILogger,
+    queue: Queue
+) => BaseAdFetcher<T, R, RawAdType>;
+
+type ConstructorProcessorType<T extends IAd, R, RawAdType> = new (
+    adFetcher: BaseAdFetcher<T, R, RawAdType>,
+    telegramService: TelegramService,
+    logger: ILogger,
+    db: IDatabase,
+    urlConfig: UrlConfig
+) => BaseUrlProcessor<T, R, RawAdType>;
+
+class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 	private jobs: Map<string, NodeJS.Timeout> = new Map();
-	private fetchers: Map<string, BaseAdFetcher> = new Map();
-	private processors: Map<string, BaseUrlProcessor<BaseAdFetcher>> = new Map();
+    private fetchers: Map<string, BaseAdFetcher<T, R, RawAdType>> = new Map();
+    private processors: Map<string, BaseUrlProcessor<T, R, RawAdType>> = new Map();
 	private queues: Map<string, Queue> = new Map();
   
 	constructor(
@@ -22,8 +36,8 @@ class Scheduler extends EventEmitter {
 	  private logger: ILogger,
 	  private db: IDatabase,
 	  private telegramService: TelegramService,
-	  private fetcherClasses: { [key: string]: ConstructorFetcherType },
-	  private processorClasses: { [key: string]: ConstructorProcessorType },
+	  private fetcherClasses: { [key: string]: ConstructorFetcherType<T, R, RawAdType> },
+	  private processorClasses: { [key: string]: ConstructorProcessorType<T, R, RawAdType> },
 	  private queueConfigs: { [key: string]: Partial<QueueOptions> }
 	) {
 	  super();
@@ -67,7 +81,7 @@ class Scheduler extends EventEmitter {
 			continue;
 		  }
 		  const fetcher = new FetcherClass(
-			this.logger.child({ name: `${fetcherKey}Fetcher` }),
+			this.logger.child({ name: `${fetcherKey}_Fetcher` }),
 			queue
 		  );
 		  this.fetchers.set(fetcherKey, fetcher);

@@ -1,20 +1,33 @@
+import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import type { Queue } from "../../common/Queue";
 import type { IAd, IAdRealEstate } from "../interfaces/IAd";
 import type { ILogger } from "../interfaces/ILogger";
 
-export abstract class BaseAdFetcher{//like for each site each category (each site and category has own fields)
-
+export abstract class BaseAdFetcher<T extends IAd, R, RawAdType> {
 	constructor(
-		protected logger: ILogger,
-		// queueOptions: Partial<QueueOptions> = {}
-		protected queue: Queue
-	){}
+		protected readonly logger: ILogger,
+		protected readonly queue: Queue
+	) { }
 
-	//todo maybe diff fetch ads and get ads? fetch ads will be in base, but getads every instance of class will implement by yourself
-	abstract fetchAds(url:string): Promise<(IAd | IAdRealEstate)[]>; //prob need prop typings. (or generics, idk) cuz we get for each site different datas
+	public async fetchAds(url: string, name: string): Promise<T[]> {
+		this.logger.debug(`Fetching ads for ${name}`, { url });
+		try {
+			const rawData = await this.fetchRawData(url);
+			this.logger.debug(`Fetched ads for ${name}`, { url });
+			const ads = this.extractAds(rawData);
+			return ads.map((ad) => this.formatAd(ad));
+		} catch (error) {
+			this.logger.error(`Error fetching ads for ${name}`, { error, url });
+			throw new Error(`Failed to fetch ads for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		}
+	}
 
-	// protected abstract getAds(url:string): <T>;
+	protected abstract fetchRawData(url: string): Promise<R>;
+	protected abstract extractAds(rawData: R): RawAdType[];
+	protected abstract formatAd(rawAd: RawAdType): T;
 
-	//todo also need prob limit description to like 1500chars (tg limit)
-	protected abstract format(data: any): IAd | IAdRealEstate //format that data to our interface.
+	protected async fetchWithQueue<ResponseType>(url: string, config: AxiosRequestConfig): Promise<ResponseType> {
+		const response = await this.queue.add<AxiosResponse<ResponseType>>(() => axios.get(url, config));
+		return response.data;
+	}
 }

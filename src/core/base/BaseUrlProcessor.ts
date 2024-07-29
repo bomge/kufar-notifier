@@ -16,11 +16,11 @@ export interface PriceChange {
 	isIncrease: boolean;
 }
 
-export abstract class BaseUrlProcessor<T extends BaseAdFetcher>  {
+export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 	private imgCount: number = 5;
 
 	constructor(
-		protected adFetcher: T,
+		protected adFetcher: BaseAdFetcher<T, R, RawAdType>,
 		protected telegramService: TelegramService,
 		protected logger: ILogger,
 		protected db: IDatabase,
@@ -32,13 +32,13 @@ export abstract class BaseUrlProcessor<T extends BaseAdFetcher>  {
 	//todo try catch for whole and each add sending msg to tg
 	async processAds(): Promise<void> {
 		try {
-		  const allAds = await this.adFetcher.fetchAds(this.urlConfig.url);
+		  const allAds = await this.adFetcher.fetchAds(this.urlConfig.url, this.urlConfig.prefix);
 		  const ads = sortByField(allAds, 'description_full');
 	
 		  await Promise.all(ads.map(ad => this.processAd(ad)));
 		} catch (error) {
-		  this.logger.error(`Error processing ads for ${this.urlConfig.url}`, this.urlConfig, error);
-		  await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.url}: ${error.message}`);
+		  this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
+		  await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);
 		}
 	  }
 

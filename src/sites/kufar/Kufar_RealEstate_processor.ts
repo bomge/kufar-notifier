@@ -7,8 +7,9 @@ import type { UrlConfig } from "../../core/interfaces/IConfig";
 import * as format from '../../utils/format';
 import type Kufar_RealEstate from "./Kufar_RealEstate_fetcher";
 import type Kufar_RealEstateFetcher from "./Kufar_RealEstate_fetcher";
+import type { IKufarAd, IKufarAdsResponse } from "../../core/interfaces/IKufarResponseAPI";
 
-export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<Kufar_RealEstateFetcher> {
+export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate, IKufarAdsResponse, IKufarAd> {
 
 	constructor(
 		protected adFetcher: Kufar_RealEstate,

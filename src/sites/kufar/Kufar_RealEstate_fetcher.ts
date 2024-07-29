@@ -9,7 +9,7 @@ import type { Queue, QueueOptions } from "../../common/Queue";
 //todo mobe to config
 const MAX_DESCRIPTION_TRYS = 5
 
-export default class Kufar_RealEstateFetcher extends BaseAdFetcher {
+export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstate, IKufarAdsResponse, IKufarAd> {
 	// private queue: Queue;
 
 	/* constructor(
@@ -27,17 +27,7 @@ export default class Kufar_RealEstateFetcher extends BaseAdFetcher {
 		// });
 	} */
 
-	async fetchAds(url: string): Promise<IAdRealEstate[]> {
-		this.logger.debug('fetching kufar',{url})
-		const res = await this.queue.add<AxiosResponse<IKufarAdsResponse>>(() =>
-			axios.get(url, { headers: defaultHeadersKufar })
-		);
-		this.logger.debug('fetched kufar')
-
-		return res.data.ads.map(this.format);
-	}
-
-	protected format(data: IKufarAd): IAdRealEstate {
+	protected formatAd(data: IKufarAd): IAdRealEstate {
 		return {
 			id: String(data.ad_id),
 			adress: data.account_parameters.find(a => a.pl == 'Адрес')?.v?.split(', Гомель')[0] || 'Гомель?',// TODO REDO
@@ -93,6 +83,14 @@ export default class Kufar_RealEstateFetcher extends BaseAdFetcher {
 			return ''
 		}
 	}
+
+	protected async fetchRawData(url: string): Promise<IKufarAdsResponse> {
+        return this.fetchWithQueue<IKufarAdsResponse>(url, { headers: defaultHeadersKufar });
+    }
+
+    protected extractAds(rawData: IKufarAdsResponse): IKufarAd[] {
+        return rawData.ads;
+    }
 }
 
 const defaultHeadersKufar = {

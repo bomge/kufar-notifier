@@ -25,7 +25,7 @@ type queueConfigsType = {[key: string]:Omit< QueueOptions, 'logger'> }
 
 const queueConfigs:queueConfigsType = { //add types
 	default: { concurrency: 2, interval: 10, maxPerInterval: 5 },
-	kufar: { concurrency: 3, interval: 15, maxPerInterval: 10 },
+	kufar: { concurrency: 2, interval: 5, maxPerInterval: 3 },
 	telegram: { concurrency: 2, interval: 10, maxPerInterval: 3 },
 	// Add other site-specific configs here
 };

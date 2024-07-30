@@ -1,15 +1,17 @@
-export interface IKufarAdsResponse {
-    ads: IKufarAd[];
+import type { AdParameter, InnerCategory, MainCategory, SubCategory } from "./meta/test2_generics";
+
+export interface IKufarAdsResponse<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> {
+    ads: IKufarAd<T, U, V>[];
     pagination: Pagination;
     total: number;
 }
 
-export interface IKufarAd {
+export interface IKufarAd<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> {
     account_id: string;
     account_parameters: AccountParameter[];
     ad_id: number;
     ad_link: string;
-    ad_parameters: AdParameter[];
+    ad_parameters:  AdParameter<T, U, V>[];
     body: string | null;
     body_short: string;
     category: string;
@@ -39,14 +41,14 @@ interface AccountParameter {
     g?: Group[];
 }
 
-interface AdParameter {
-    pl: string;
-    vl: string | string[];
-    p: string;
-    v: string | number | boolean | string[];
-    pu: string;
-    g?: Group[];
-}
+// interface AdParameter {
+//     pl: string;
+//     vl: string | string[];
+//     p: string;
+//     v: string | number | boolean | string[];
+//     pu: string;
+//     g?: Group[];
+// }
 
 interface Group {
     gi: number;

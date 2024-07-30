@@ -2,15 +2,20 @@ import axios, { type AxiosResponse } from "axios";
 const cheerio = require('cheerio');
 import { BaseAdFetcher } from "../../core/base/BaseAdFetcher";
 import type { IAd, IAdRealEstate } from "../../core/interfaces/IAd";
-import type { IKufarAd, IKufarAdsResponse } from "../../core/interfaces/IKufarResponseAPI";
+import type { IKufarAd, IKufarAdsResponse } from "./IKufarResponseAPI";
 import type { ILogger } from "../../core/interfaces/ILogger";
 import type { Queue, QueueOptions } from "../../common/Queue";
+import type { MainCategory, SubCategory, InnerCategory } from "./meta/test2_generics";
 
 //todo mobe to config
 const MAX_DESCRIPTION_TRYS = 5
 
-export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstate, IKufarAdsResponse, IKufarAd> {
-	// private queue: Queue;
+export default class Kufar_Fetcher<
+    T extends MainCategory,
+    U extends SubCategory<T>,
+    V extends InnerCategory<T, U>
+> extends BaseAdFetcher<IAdRealEstate, IKufarAdsResponse<T, U, V>, IKufarAd<T, U, V>> {
+  	// private queue: Queue;
 
 	/* constructor(
 		private logger: ILogger,
@@ -75,11 +80,11 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 		return (fullDescr || ad.description_short || '').slice(0, 850);
 	}
 	
-	protected async fetchRawData(url: string): Promise<IKufarAdsResponse> {
-        return this.fetchWithQueue<IKufarAdsResponse>(url, { headers: defaultHeadersKufar });
+	protected async fetchRawData(url: string): Promise<IKufarAdsResponse<T, U, V>> {
+        return this.fetchWithQueue<IKufarAdsResponse<T, U, V>>(url, { headers: defaultHeadersKufar });
     }
 
-    protected extractAds(rawData: IKufarAdsResponse): IKufarAd[] {
+    protected extractAds(rawData: IKufarAdsResponse<T, U, V>): IKufarAd<T, U, V>[] {
         return rawData.ads;
     }
 }

@@ -29,21 +29,19 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 	) {
 		this.imgCount = urlConfig.imgСount || 5
 	}
-	protected abstract formatAd(rawAd: RawAdType): T;
 
 	//todo try catch for whole and each add sending msg to tg
 	async processAds(): Promise<void> {
 		try {
-			const allAds = await this.adFetcher.fetchAds(this.urlConfig.url, this.urlConfig.prefix);
-			const formattedAds = allAds.map(this.formatAd)
-			const ads = sortByField(formattedAds, 'description_full');
-
-			await Promise.all(ads.map(ad => this.processAd(ad)));
+		  const allAds = await this.adFetcher.fetchAds(this.urlConfig.url, this.urlConfig.prefix);
+		  const ads = sortByField(allAds, 'description_full');
+	
+		  await Promise.all(ads.map(ad => this.processAd(ad)));
 		} catch (error) {
-			this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
-			await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);
+		  this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
+		  await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);
 		}
-	}
+	  }
 
 	private async processAd(ad: IAd): Promise<void> {
 		try {
@@ -109,7 +107,7 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 		const formatChange = (value: number, sign: string, currency: string) =>
 			value !== 0 ? `${sign}${formatPrice(value)} ${currency}` : '';
 
-		const bynChange = formatChange(change.changeBYN, bynSign, 'BYN');
+		const bynChange = formatChange(change.changeBYN, bynSign , 'BYN');
 		const usdChange = formatChange(change.changeUSD, usdSign, 'USD');
 
 		return `Изменение: ${bynChange} ${usdChange}\n` +
@@ -127,7 +125,7 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 			messageContent.imgs[messageContent.imgs.length - 1].parse_mode = 'HTML';
 		}
 
-		return this.telegramService.sendMessage(messageContent,this.urlConfig.tgId);
+		return this.telegramService.sendMessage(messageContent);
 	}
 
 

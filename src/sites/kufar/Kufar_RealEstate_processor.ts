@@ -5,14 +5,25 @@ import type { IDatabase } from "../../core/interfaces/IDatabase";
 import type { ILogger } from "../../core/interfaces/ILogger";
 import type { UrlConfig } from "../../core/interfaces/IConfig";
 import * as format from '../../utils/format';
-import type Kufar_RealEstate from "./Kufar_RealEstate_fetcher";
-import type Kufar_RealEstateFetcher from "./Kufar_RealEstate_fetcher";
-import type { IKufarAd, IKufarAdsResponse } from "../../core/interfaces/IKufarResponseAPI";
+import type Kufar_RealEstate from "./Kufar_fetcher";
+import type Kufar_Fetcher from "./Kufar_fetcher";
+import type { IKufarAd, IKufarAdsResponse } from "./IKufarResponseAPI";
+import { getAdParameter } from "./meta/test2_generics";
 
-export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate, IKufarAdsResponse, IKufarAd> {
+
+// type category = 'realEstate';
+// let subCategory = 'Квартиры';
+// type innerCategory = 'Квартиры {category:1010 type:let}';
+
+// Define the specific types using the aliases
+type RealEstateAd = IKufarAd<'realEstate','Квартиры', 'Квартиры {category:1010 rent_type:1 type:let}'>;
+type RealEstateAdsResponse = IKufarAdsResponse<'realEstate','Квартиры', 'Квартиры {category:1010 rent_type:1 type:let}'>;
+
+
+export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate, RealEstateAdsResponse, RealEstateAd> {
 
 	constructor(
-		protected adFetcher: Kufar_RealEstate,
+		protected adFetcher: Kufar_RealEstate<'realEstate','Квартиры', 'Квартиры {category:1010 rent_type:1 type:let}'>,
 		protected telegramService: TelegramService,
 		protected logger: ILogger,
 		protected db: IDatabase,
@@ -26,6 +37,32 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate
 			db,
 			urlConfig
 		)
+	}
+
+	protected formatAd(data: RealEstateAd): IAdRealEstate {
+		return {
+			id: String(data.ad_id),
+			adress: data.account_parameters.find(a => a.pl == 'Адрес')?.v?.split(', Гомель')[0] || 'Гомель?',// TODO REDO
+			condition: data.ad_parameters.find(a => a.pl === 'Состояние')?.vl as (string | undefined),
+			currency: data.currency,
+			price_byn: String(+data.price_byn / 100),
+			price_usd: String(+data.price_usd / 100),
+			price: data.currency === 'BYR' ? data.price_byn : data.price_usd,
+			images: data.images.map(a => `https://rms4.kufar.by/v1/gallery/${a.path}`),
+			//@ts-ignore
+			who_can_rent: getAdParameter(data.ad_parameters,'') ?.vl?.join('/'),
+			who_can_rent: data.ad_parameters.find(a => a.p == 'flat_rent_for_whom')?.vl?.join('/'),
+			//@ts-ignore
+			floor: data.ad_parameters.find(a => a.p == 'floor')?.v[0],
+			floor_total: data.ad_parameters.find(a => a.p === 're_number_floors')?.vl as (string | undefined),
+			flat_repair: data.ad_parameters.find(a => a.pl === 'Ремонт')?.vl as (string | undefined),
+			room_count: data.ad_parameters.find(a => a.p == 'rooms')?.v as (string | undefined),
+			size: data.ad_parameters.find(a => a.p == 'size')?.v as (number | undefined),
+			description_short: data.body_short,
+			description_full: data.body_short?.length < 150 ? data.body_short : undefined,
+			link: data.ad_link
+
+		}
 	}
 
 	protected async formatAdMessage(ad: IAdRealEstate, priceChange?: PriceChange): Promise<string> {
@@ -86,3 +123,4 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate
 		}
 	}
 }
+

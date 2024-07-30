@@ -1,4 +1,4 @@
-import Kufar_RealEstateFetcher from "./src/sites/kufar/Kufar_RealEstate_fetcher"
+import Kufar_Fetcher from "./src/sites/kufar/Kufar_fetcher"
 import { Kufar_RealEstateUrlProcessor } from "./src/sites/kufar/Kufar_RealEstate_processor"
 import { config } from './config'
 import LoggerService from "./src/common/Logger"
@@ -43,7 +43,7 @@ const scheduler = new Scheduler(
 	db,
 	telegramService,
 	{
-		kufar_re: Kufar_RealEstateFetcher,
+		kufar_re: Kufar_Fetcher,
 		// Add other fetcher classes here
 	},
 	{

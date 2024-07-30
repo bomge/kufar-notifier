@@ -5,6 +5,7 @@ import type { IDatabase, IDbItem } from "../interfaces/IDatabase";
 import type { ILogger } from "../interfaces/ILogger";
 import type { UrlConfig } from "../interfaces/IConfig";
 import type { BaseAdFetcher } from "./BaseAdFetcher";
+import * as format from '../../utils/format';
 
 export interface PriceChange {
 	oldPriceBYN: number;
@@ -87,6 +88,30 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 			changeUSD,
 			isIncrease: changeBYN > 0 || changeUSD > 0
 		};
+	}
+
+	protected formatPriceChangeStatus(priceChange?: PriceChange): string {
+		if (!priceChange) return '';
+
+		const emoji = priceChange.isIncrease ? '🔺' : '🔰';
+		const priceChangeInfo = this.formatPriceChange(priceChange);
+		return `${format.underline('сменилась цена')} ${emoji}\n${format.blockquote(priceChangeInfo)}`;
+	}
+	protected formatPriceChange(change: PriceChange): string {
+		const emoji = change.isIncrease ? '🔺' : '🔰';
+		const sign = change.isIncrease ? '+' : '';
+		const bynSign = change.changeBYN > 0 ? '+' : '';
+		const usdSign = change.changeUSD > 0 ? '+' : '';
+
+		const formatPrice = (value: number) => Math.round(value);
+		const formatChange = (value: number, sign: string, currency: string) =>
+			value !== 0 ? `${sign}${formatPrice(value)} ${currency}` : '';
+
+		const bynChange = formatChange(change.changeBYN, bynSign , 'BYN');
+		const usdChange = formatChange(change.changeUSD, usdSign, 'USD');
+
+		return `Изменение: ${bynChange} ${usdChange}\n` +
+			`Старая цена: ${formatPrice(change.oldPriceBYN)}руб.  ${formatPrice(change.oldPriceUSD)}$`;
 	}
 
 	private async notifyTelegram(ad: IAd, priceChange?: PriceChange): Promise<void> {

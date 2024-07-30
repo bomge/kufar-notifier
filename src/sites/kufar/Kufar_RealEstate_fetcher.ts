@@ -53,13 +53,13 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 	}
 
 	//todo handle errors
-	async getFullDescription(id: string, err_try = 0): Promise<string> {
+	private async fetchFullDescription(ad: IAdRealEstate, err_try = 0): Promise<string> {
 		try {
 			// const res = await axios.get(`https://re.kufar.by/vi/${id}`, { headers: defaultHeaderDescription })
 			const res = await this.queue.add<AxiosResponse>(() => {
 
-				this.logger.info('getting descr for ' + id, { id })
-				return axios.get(`https://re.kufar.by/vi/${id}`, { headers: defaultHeaderDescription })
+				this.logger.info('getting descr for ' + ad.id, { id:ad.id })
+				return axios.get(ad.link, { headers: defaultHeaderDescription })
 			}
 			);
 			const resHtml = res.data
@@ -69,7 +69,7 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 			if (!description?.length) {
 				// err_try++
 
-				this.logger.info('no description ' + id)
+				this.logger.info('no description ' + ad.id)
 				// this.logger.info('no description ' + `[${err_try}/${MAX_DESCRIPTION_TRYS}]`,{id})
 				// if (err_try < MAX_DESCRIPTION_TRYS) {
 					// return (this.getFullDescription(id, err_try))
@@ -78,12 +78,26 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 			}
 			return description
 		} catch (error) {
-			this.logger.error(`err get descr https://re.kufar.by/vi/${id}`, { error,id }, error)
+			this.logger.error(`err get descr ${ad.link}`, { error,id:ad.id }, error)
 			// process.exit()
 			return ''
 		}
 	}
 
+	async getFullDescription(ad: IAdRealEstate): Promise<string> {
+		if (ad.description_full) return ad.description_full;
+
+		this.logger.info(`need get full description for ad ${ad.id}`);
+		const fullDescr = await this.fetchFullDescription(ad);
+
+		if (fullDescr) {
+			ad.description_full = fullDescr;
+			this.logger.info(`Got full description for ad ${ad.id}`);
+		}
+
+		return (fullDescr || ad.description_short || '').slice(0, 850);
+	}
+	
 	protected async fetchRawData(url: string): Promise<IKufarAdsResponse> {
         return this.fetchWithQueue<IKufarAdsResponse>(url, { headers: defaultHeadersKufar });
     }

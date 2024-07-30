@@ -27,39 +27,16 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 		// });
 	} */
 
-	protected formatAd(data: IKufarAd): IAdRealEstate {
-		return {
-			id: String(data.ad_id),
-			adress: data.account_parameters.find(a => a.pl == 'Адрес')?.v?.split(', Гомель')[0] || 'Гомель?',// TODO REDO
-			condition: data.ad_parameters.find(a => a.pl === 'Состояние')?.vl as (string | undefined),
-			currency: data.currency,
-			price_byn: String(+data.price_byn / 100),
-			price_usd: String(+data.price_usd / 100),
-			price: data.currency === 'BYR' ? data.price_byn : data.price_usd,
-			images: data.images.map(a => `https://rms4.kufar.by/v1/gallery/${a.path}`),
-			//@ts-ignore
-			who_can_rent: data.ad_parameters.find(a => a.p == 'flat_rent_for_whom')?.vl?.join('/'),
-			//@ts-ignore
-			floor: data.ad_parameters.find(a => a.p == 'floor')?.v[0],
-			floor_total: data.ad_parameters.find(a => a.p == 're_number_floors')?.vl as (string | undefined),
-			flat_repair: data.ad_parameters.find(a => a.pl === 'Ремонт')?.vl as (string | undefined),
-			room_count: data.ad_parameters.find(a => a.p == 'rooms')?.v as (string | undefined),
-			size: data.ad_parameters.find(a => a.p == 'size')?.v as (number | undefined),
-			description_short: data.body_short,
-			description_full: data.body_short?.length < 150 ? data.body_short : undefined,
-			link: data.ad_link
-
-		}
-	}
+	
 
 	//todo handle errors
-	async getFullDescription(id: string, err_try = 0): Promise<string> {
+	private async fetchFullDescription(ad: IAdRealEstate, err_try = 0): Promise<string> {
 		try {
 			// const res = await axios.get(`https://re.kufar.by/vi/${id}`, { headers: defaultHeaderDescription })
 			const res = await this.queue.add<AxiosResponse>(() => {
 
-				this.logger.info('getting descr for ' + id, { id })
-				return axios.get(`https://re.kufar.by/vi/${id}`, { headers: defaultHeaderDescription })
+				this.logger.info('getting descr for ' + ad.id, { id:ad.id })
+				return axios.get(ad.link, { headers: defaultHeaderDescription })
 			}
 			);
 			const resHtml = res.data
@@ -69,7 +46,7 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 			if (!description?.length) {
 				// err_try++
 
-				this.logger.info('no description ' + id)
+				this.logger.info('no description ' + ad.id)
 				// this.logger.info('no description ' + `[${err_try}/${MAX_DESCRIPTION_TRYS}]`,{id})
 				// if (err_try < MAX_DESCRIPTION_TRYS) {
 					// return (this.getFullDescription(id, err_try))
@@ -78,12 +55,26 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 			}
 			return description
 		} catch (error) {
-			this.logger.error(`err get descr https://re.kufar.by/vi/${id}`, { error,id }, error)
+			this.logger.error(`err get descr ${ad.link}`, { error,id:ad.id }, error)
 			// process.exit()
 			return ''
 		}
 	}
 
+	async getFullDescription(ad: IAdRealEstate): Promise<string> {
+		if (ad.description_full) return ad.description_full;
+
+		this.logger.info(`need get full description for ad ${ad.id}`);
+		const fullDescr = await this.fetchFullDescription(ad);
+
+		if (fullDescr) {
+			ad.description_full = fullDescr;
+			this.logger.info(`Got full description for ad ${ad.id}`);
+		}
+
+		return (fullDescr || ad.description_short || '').slice(0, 850);
+	}
+	
 	protected async fetchRawData(url: string): Promise<IKufarAdsResponse> {
         return this.fetchWithQueue<IKufarAdsResponse>(url, { headers: defaultHeadersKufar });
     }

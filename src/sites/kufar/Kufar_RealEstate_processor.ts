@@ -28,11 +28,36 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate
 		)
 	}
 
+	protected formatAd(data: IKufarAd): IAdRealEstate {
+		return {
+			id: String(data.ad_id),
+			adress: data.account_parameters.find(a => a.pl == 'Адрес')?.v?.split(', Гомель')[0] || 'Гомель?',// TODO REDO
+			condition: data.ad_parameters.find(a => a.pl === 'Состояние')?.vl as (string | undefined),
+			currency: data.currency,
+			price_byn: String(+data.price_byn / 100),
+			price_usd: String(+data.price_usd / 100),
+			price: data.currency === 'BYR' ? data.price_byn : data.price_usd,
+			images: data.images.map(a => `https://rms4.kufar.by/v1/gallery/${a.path}`),
+			//@ts-ignore
+			who_can_rent: data.ad_parameters.find(a => a.p == 'flat_rent_for_whom')?.vl?.join('/'),
+			//@ts-ignore
+			floor: data.ad_parameters.find(a => a.p == 'floor')?.v[0],
+			floor_total: data.ad_parameters.find(a => a.p == 're_number_floors')?.vl as (string | undefined),
+			flat_repair: data.ad_parameters.find(a => a.pl === 'Ремонт')?.vl as (string | undefined),
+			room_count: data.ad_parameters.find(a => a.p == 'rooms')?.v as (string | undefined),
+			size: data.ad_parameters.find(a => a.p == 'size')?.v as (number | undefined),
+			description_short: data.body_short,
+			description_full: data.body_short?.length < 150 ? data.body_short : undefined,
+			link: data.ad_link
+
+		}
+	}
+
 	protected async formatAdMessage(ad: IAdRealEstate, priceChange?: PriceChange): Promise<string> {
 		const priceChangeStatus = this.formatPriceChangeStatus(priceChange);
 
 		const { adress_text, floor_text, price_text, room_area_text, who_can_rent_text } = this.getFormatingTexts(ad);
-		const description = await this.getFullDescription(ad);
+		const description = await this.adFetcher.getFullDescription(ad);
 
 
 		return `${format.bold(this.urlConfig.prefix)} ` + priceChangeStatus + '\n'
@@ -42,43 +67,6 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate
 			+ who_can_rent_text
 			+ ad.link + '\n'
 			+ format.monospace(description);
-	}
-
-	private formatPriceChangeStatus(priceChange?: PriceChange): string {
-		if (!priceChange) return '';
-
-		const emoji = priceChange.isIncrease ? '🔺' : '🔰';
-		const priceChangeInfo = this.formatPriceChange(priceChange);
-		return `${format.underline('сменилась цена')} ${emoji}\n${format.blockquote(priceChangeInfo)}`;
-	}
-	protected formatPriceChange(change: PriceChange): string {
-		const emoji = change.isIncrease ? '🔺' : '🔰';
-		const sign = change.isIncrease ? '+' : '';
-		const bynSign = change.changeBYN > 0 ? '+' : '';
-		const usdSign = change.changeUSD > 0 ? '+' : '';
-
-		const formatPrice = (value: number) => Math.round(value);
-		const formatChange = (value: number, sign: string, currency: string) =>
-			value !== 0 ? `${sign}${formatPrice(value)} ${currency}` : '';
-
-		const bynChange = formatChange(change.changeBYN, bynSign , 'BYN');
-		const usdChange = formatChange(change.changeUSD, usdSign, 'USD');
-
-		return `Старая цена: ${formatPrice(change.oldPriceBYN)}руб.  ${formatPrice(change.oldPriceUSD)}$\n` +
-			`Изменение: ${bynChange} ${usdChange}`;
-	}
-	private async getFullDescription(ad: IAdRealEstate): Promise<string> {
-		if (ad.description_full) return ad.description_full;
-
-		this.logger.info(`need get full description for ad ${ad.id}`);
-		const fullDescr = await this.adFetcher.getFullDescription(ad.id);
-
-		if (fullDescr) {
-			ad.description_full = fullDescr;
-			this.logger.info(`Got full description for ad ${ad.id}`);
-		}
-
-		return (fullDescr || ad.description_short || '').slice(0, 850);
 	}
 
 	private getFormatingTexts(ad: IAdRealEstate) {

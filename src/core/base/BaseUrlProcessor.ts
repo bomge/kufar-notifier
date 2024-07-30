@@ -5,6 +5,7 @@ import type { IDatabase, IDbItem } from "../interfaces/IDatabase";
 import type { ILogger } from "../interfaces/ILogger";
 import type { UrlConfig } from "../interfaces/IConfig";
 import type { BaseAdFetcher } from "./BaseAdFetcher";
+import * as format from '../../utils/format';
 
 export interface PriceChange {
 	oldPriceBYN: number;
@@ -28,19 +29,21 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 	) {
 		this.imgCount = urlConfig.imgСount || 5
 	}
+	protected abstract formatAd(rawAd: RawAdType): T;
 
 	//todo try catch for whole and each add sending msg to tg
 	async processAds(): Promise<void> {
 		try {
-		  const allAds = await this.adFetcher.fetchAds(this.urlConfig.url, this.urlConfig.prefix);
-		  const ads = sortByField(allAds, 'description_full');
-	
-		  await Promise.all(ads.map(ad => this.processAd(ad)));
+			const allAds = await this.adFetcher.fetchAds(this.urlConfig.url, this.urlConfig.prefix);
+			const formattedAds = allAds.map(this.formatAd)
+			const ads = sortByField(formattedAds, 'description_full');
+
+			await Promise.all(ads.map(ad => this.processAd(ad)));
 		} catch (error) {
-		  this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
-		  await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);
+			this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
+			await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);
 		}
-	  }
+	}
 
 	private async processAd(ad: IAd): Promise<void> {
 		try {
@@ -87,6 +90,30 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 			changeUSD,
 			isIncrease: changeBYN > 0 || changeUSD > 0
 		};
+	}
+
+	protected formatPriceChangeStatus(priceChange?: PriceChange): string {
+		if (!priceChange) return '';
+
+		const emoji = priceChange.isIncrease ? '🔺' : '🔰';
+		const priceChangeInfo = this.formatPriceChange(priceChange);
+		return `${format.underline('сменилась цена')} ${emoji}\n${format.blockquote(priceChangeInfo)}`;
+	}
+	protected formatPriceChange(change: PriceChange): string {
+		const emoji = change.isIncrease ? '🔺' : '🔰';
+		const sign = change.isIncrease ? '+' : '';
+		const bynSign = change.changeBYN > 0 ? '+' : '';
+		const usdSign = change.changeUSD > 0 ? '+' : '';
+
+		const formatPrice = (value: number) => Math.round(value);
+		const formatChange = (value: number, sign: string, currency: string) =>
+			value !== 0 ? `${sign}${formatPrice(value)} ${currency}` : '';
+
+		const bynChange = formatChange(change.changeBYN, bynSign, 'BYN');
+		const usdChange = formatChange(change.changeUSD, usdSign, 'USD');
+
+		return `Изменение: ${bynChange} ${usdChange}\n` +
+			`Старая цена: ${formatPrice(change.oldPriceBYN)}руб.  ${formatPrice(change.oldPriceUSD)}$`;
 	}
 
 	private async notifyTelegram(ad: IAd, priceChange?: PriceChange): Promise<void> {

@@ -9,13 +9,14 @@ export abstract class BaseAdFetcher<T extends IAd, R, RawAdType> {
 		protected readonly queue: Queue
 	) { }
 
-	public async fetchAds(url: string, name: string): Promise<T[]> {
+	public async fetchAds(url: string, name: string): Promise<RawAdType[]> {
 		this.logger.debug(`Fetching ads for ${name}`, { url });
 		try {
 			const rawData = await this.fetchRawData(url);
 			this.logger.debug(`Fetched ads for ${name}`, { url });
 			const ads = this.extractAds(rawData);
-			return ads.map((ad) => this.formatAd(ad));
+			return ads
+			// return ads.map((ad) => this.formatAd(ad));
 		} catch (error) {
 			this.logger.error(`Error fetching ads for ${name}`, { error, url });
 			throw new Error(`Failed to fetch ads for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -24,7 +25,6 @@ export abstract class BaseAdFetcher<T extends IAd, R, RawAdType> {
 
 	protected abstract fetchRawData(url: string): Promise<R>;
 	protected abstract extractAds(rawData: R): RawAdType[];
-	protected abstract formatAd(rawAd: RawAdType): T;
 
 	protected async fetchWithQueue<ResponseType>(url: string, config: AxiosRequestConfig): Promise<ResponseType> {
 		const response = await this.queue.add<AxiosResponse<ResponseType>>(() => axios.get(url, config));

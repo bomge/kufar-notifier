@@ -42,7 +42,7 @@ export default class Kufar_RealEstateFetcher  extends BaseAdFetcher<IAdRealEstat
 			const resHtml = res.data
 			const $ = cheerio.load(resHtml);
 
-			const description = $('div[itemprop="description"]').text();
+			const description = $('div[itemprop="description"]')?.html()?.replace(/<br\s*\/?>/gi, '\n');
 			if (!description?.length) {
 				// err_try++
 

@@ -1,43 +1,47 @@
-import  type {categories as adParameterStructure} from'./categories_result'
+import type { categories as adParameterStructure } from './categories_result';
 
 export type MainCategory = keyof typeof adParameterStructure;
 
 export type SubCategory<T extends MainCategory> = keyof typeof adParameterStructure[T];
 
-export type InnerCategory<T extends MainCategory, U extends SubCategory<T>> = keyof typeof adParameterStructure[T][U];
+type AdParameterKeys<T extends MainCategory, U extends SubCategory<T>> = keyof typeof adParameterStructure[T][U];
 
-type AdParameterKeys<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> = keyof typeof adParameterStructure[T][U][V];
+type AdParameterValueType = string | number | string[];
 
-type AdParameterValueType = string | number | string[] | undefined;
-
-export interface AdParameter<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> {
+export interface AdParameter<T extends MainCategory, U extends SubCategory<T>> {
     pl: string; // display label
-    vl: AdParameterValueType;
-    p: AdParameterKeys<T, U, V>; //use the dynamic keys here
-    v: AdParameterValueType;
+    vl: AdParameterValueType | undefined;
+    p: AdParameterKeys<T, U>; // Use the dynamic keys here
+    v: AdParameterValueType | undefined;
     pu: string; // presumably the unit
 }
 
-interface IKufarAd<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> {
-    ad_parameters: AdParameter<T, U, V>[]; // Use the new nested structure
+//define the interface for the ad data
+interface IKufarAd<T extends MainCategory, U extends SubCategory<T>> {
+    ad_parameters: AdParameter<T, U>[];
+    // other fields...
 }
 
-export function getAdParameter<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>, K extends AdParameterKeys<T, U, V>>(
-    params: AdParameter<T, U, V>[],
+export function getAdParameter<T extends MainCategory, U extends SubCategory<T>, K extends AdParameterKeys<T, U>>(
+    params: AdParameter<T, U>[],
     key: K
 ): AdParameterValueType | undefined {
     const param = params.find(a => a.p === key);
     return param?.vl;
 }
 
+//type guard function to check if a parameter is defined
 function isDefined<T>(value: T | undefined): value is T {
     return value !== undefined;
 }
 
-// const flatAd: IKufarAd<'realEstate', 'Квартиры', 'Квартиры {category:1010 type:let}'> = {
+//usage
+// const flatSellAd: IKufarAd<'realEstate', 'Квартиры'> = {
 //     ad_parameters: [
-//         { pl: "Тип сделки", vl: "sell", p: "flat_kitchen", v: "sell", pu: "" },
+//         { pl: "Этаж", vl: 3, p: "floor", v: 3, pu: "" },
+//         { pl: "Количество комнат", vl: "2", p: "rooms", v: "2", pu: "" }, 
+//         { pl: "Размер", vl: 50, p: "size", v: 50, pu: "м²" },
 //     ]
 // };
 
-// const dealType = getAdParameter(flatAd.ad_parameters, "flat_bath");
+// const floor = getAdParameter(flatSellAd.ad_parameters, "balcony" );

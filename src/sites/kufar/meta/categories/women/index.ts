@@ -1,4 +1,6 @@
 import {refs} from './refs'
 import {rules} from './rules'
 
-export  {refs, rules}
+const name = "Женский гардероб"
+
+export  {refs, rules,name}

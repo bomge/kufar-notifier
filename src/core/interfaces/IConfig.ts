@@ -11,7 +11,6 @@ export interface UrlConfig {
 	imgСount?: number,
 	onlyWithPhoto?: boolean
 	type: 're' | 'car' | 'other' | 'phone'
-	tgId?: string
 }
 
 export interface TelegramServiceConfig {

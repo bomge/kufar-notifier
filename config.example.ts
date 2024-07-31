@@ -37,6 +37,15 @@ export const config: IConfig = {
 				checkInterval:'5-10',
 				onlyWithPhoto:true,
 				imgСount:5
+			},
+			{
+				prefix:'kufar телефоны',
+				enabled: 1,
+				type:"phone",
+				url:'https://api.kufar.by/search-api/v2/search/rendered-paginated?ar=5&cat=17010&cmp=0&lang=ru&prn=17000&rgn=2&size=43&sort=lst.d',
+				checkInterval:'1-10',
+				onlyWithPhoto:true,
+				imgСount:5
 			}
 		]
 		}

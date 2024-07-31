@@ -5,7 +5,7 @@ import type { IAd, IAdRealEstate } from "../../core/interfaces/IAd";
 import type { IKufarAd, IKufarAdsResponse } from "./IKufarResponseAPI";
 import type { ILogger } from "../../core/interfaces/ILogger";
 import type { Queue, QueueOptions } from "../../common/Queue";
-import type { MainCategory, SubCategory, InnerCategory } from "./meta/test2_generics";
+import type { MainCategory, SubCategory } from "./meta/test2_generics";
 
 //todo mobe to config
 const MAX_DESCRIPTION_TRYS = 5
@@ -13,8 +13,7 @@ const MAX_DESCRIPTION_TRYS = 5
 export default class Kufar_Fetcher<
     T extends MainCategory,
     U extends SubCategory<T>,
-    V extends InnerCategory<T, U>
-> extends BaseAdFetcher<IAdRealEstate, IKufarAdsResponse<T, U, V>, IKufarAd<T, U, V>> {
+> extends BaseAdFetcher<IKufarAdsResponse<T, U>, IKufarAd<T, U>> {
   	// private queue: Queue;
 
 	/* constructor(
@@ -35,7 +34,7 @@ export default class Kufar_Fetcher<
 	
 
 	//todo handle errors
-	private async fetchFullDescription(ad: IAdRealEstate, err_try = 0): Promise<string> {
+	private async fetchFullDescription(ad: IAd, err_try = 0): Promise<string> {
 		try {
 			// const res = await axios.get(`https://re.kufar.by/vi/${id}`, { headers: defaultHeaderDescription })
 			const res = await this.queue.add<AxiosResponse>(() => {
@@ -66,25 +65,26 @@ export default class Kufar_Fetcher<
 		}
 	}
 
-	async getFullDescription(ad: IAdRealEstate): Promise<string> {
+	async getFullDescription(ad: IAd): Promise<string> {
 		if (ad.description_full) return ad.description_full;
 
 		this.logger.info(`need get full description for ad ${ad.id}`);
 		const fullDescr = await this.fetchFullDescription(ad);
 
 		if (fullDescr) {
-			ad.description_full = fullDescr;
+			ad.description_full = fullDescr
+
 			this.logger.info(`Got full description for ad ${ad.id}`);
 		}
 
-		return (fullDescr || ad.description_short || '').slice(0, 850);
+		return (fullDescr || ad.description_short || '').slice(0, 750);
 	}
 	
-	protected async fetchRawData(url: string): Promise<IKufarAdsResponse<T, U, V>> {
-        return this.fetchWithQueue<IKufarAdsResponse<T, U, V>>(url, { headers: defaultHeadersKufar });
+	protected async fetchRawData(url: string): Promise<IKufarAdsResponse<T, U>> {
+        return this.fetchWithQueue<IKufarAdsResponse<T, U>>(url, { headers: defaultHeadersKufar });
     }
 
-    protected extractAds(rawData: IKufarAdsResponse<T, U, V>): IKufarAd<T, U, V>[] {
+    protected extractAds(rawData: IKufarAdsResponse<T, U>): IKufarAd<T, U>[] {
         return rawData.ads;
     }
 }

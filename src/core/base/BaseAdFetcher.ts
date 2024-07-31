@@ -3,7 +3,7 @@ import type { Queue } from "../../common/Queue";
 import type { IAd, IAdRealEstate } from "../interfaces/IAd";
 import type { ILogger } from "../interfaces/ILogger";
 
-export abstract class BaseAdFetcher<T extends IAd, R, RawAdType> {
+export abstract class BaseAdFetcher<R, RawAdType> {
 	constructor(
 		protected readonly logger: ILogger,
 		protected readonly queue: Queue

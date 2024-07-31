@@ -7,12 +7,17 @@ export interface IAd {
 	currency?: string
 	images: string[];
 	link:string
+	adress:string
+	isCompanyAd?:boolean
+	companyName?:string
+	subject?:string
+	description_short?:string
+
 }
 
 export type IAllAds = IAd | IAdRealEstate
 
 export interface IAdRealEstate extends IAd {
-	adress:string
 	currency: string
 	size?: number,
 	room_count?:string,
@@ -22,4 +27,12 @@ export interface IAdRealEstate extends IAd {
 	floor?:number,
 	floor_total?:string
 	description_short?:string
+}
+
+export interface IAdPhone extends IAd {
+	condition?:string
+	shop_guarantee?:string
+	region?:string
+	description_short?:string
+	shop_address?:string
 }

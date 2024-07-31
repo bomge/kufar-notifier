@@ -15,10 +15,10 @@ import type { IAd } from "../core/interfaces/IAd";
 type ConstructorFetcherType<T extends IAd, R, RawAdType> = new (
     logger: ILogger,
     queue: Queue
-) => BaseAdFetcher<T, R, RawAdType>;
+) => BaseAdFetcher<R, RawAdType>;
 
 type ConstructorProcessorType<T extends IAd, R, RawAdType> = new (
-    adFetcher: BaseAdFetcher<T, R, RawAdType>,
+    adFetcher: BaseAdFetcher<R, RawAdType>,
     telegramService: TelegramService,
     logger: ILogger,
     db: IDatabase,
@@ -27,7 +27,7 @@ type ConstructorProcessorType<T extends IAd, R, RawAdType> = new (
 
 class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 	private jobs: Map<string, NodeJS.Timeout> = new Map();
-    private fetchers: Map<string, BaseAdFetcher<T, R, RawAdType>> = new Map();
+    private fetchers: Map<string, BaseAdFetcher<R, RawAdType>> = new Map();
     private processors: Map<string, BaseUrlProcessor<T, R, RawAdType>> = new Map();
 	private queues: Map<string, Queue> = new Map();
   
@@ -37,7 +37,7 @@ class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 	  private db: IDatabase,
 	  private telegramService: TelegramService,
 	  private fetcherClasses: { [key: string]: ConstructorFetcherType<T, R, RawAdType> },
-	  private processorClasses: { [key: string]: ConstructorProcessorType<T, R, RawAdType> },
+	  private processorClasses: { [key: string]: ConstructorProcessorType<any, any, any> },//! monkey patch cuz I idk how to handle it for multiple different processors (phone,cars...)
 	  private queueConfigs: { [key: string]: Partial<QueueOptions> }
 	) {
 	  super();
@@ -69,7 +69,8 @@ class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 	  for (const [siteName, siteConfig] of Object.entries(this.config.sites)) {
 		const uniqueTypes = new Set(siteConfig.urls.map(url => url.type));
 		for (const type of uniqueTypes) {
-		  const fetcherKey = `${siteName}_${type}`;
+		//   const fetcherKey = `${siteName}_${type}`;
+		  const fetcherKey = `${siteName}`;
 		  const FetcherClass = this.fetcherClasses[fetcherKey];
 		  if (!FetcherClass) {
 			this.logger.error(`No fetcher found for ${fetcherKey}`);
@@ -99,7 +100,8 @@ class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 			this.logger.error(`No processor found for ${fetcherKey}`);
 			continue;
 		  }
-		  const fetcher = this.fetchers.get(fetcherKey);
+		//   const fetcher = this.fetchers.get(fetcherKey);
+		  const fetcher = this.fetchers.get(siteName);
 		  if (!fetcher) {
 			this.logger.error(`No fetcher found for ${fetcherKey}`);
 			continue;

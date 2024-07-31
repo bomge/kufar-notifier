@@ -1,4 +1,6 @@
-import {refs} from './realEstate.refs'
-import {rules} from './realEstate.rules'
+import {refs} from './refs'
+import {rules} from './rules'
 
-export  {refs, rules}
+const name = "Недвижимость"
+
+export  {refs, rules,name}

@@ -48,7 +48,6 @@ class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 	}
   
 	private initializeQueues(): void {
-	  // Initialize site queues
 	  for (const siteName of Object.keys(this.config.sites)) {
 		const queueConfig = this.queueConfigs[siteName] || this.queueConfigs.default;
 		this.queues.set(siteName, new Queue({
@@ -57,7 +56,6 @@ class Scheduler<T extends IAd, R, RawAdType>  extends EventEmitter {
 		}));
 	  }
   
-	  // Initialize Telegram queue
 	  const telegramQueueConfig = this.queueConfigs.telegram || this.queueConfigs.default;
 	  this.queues.set('telegram', new Queue({
 		...telegramQueueConfig,

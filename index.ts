@@ -28,7 +28,6 @@ const queueConfigs:queueConfigsType = { //add types
 	default: { concurrency: 2, interval: 10, maxPerInterval: 5 },
 	kufar: { concurrency: 2, interval: 5, maxPerInterval: 3 },
 	telegram: { concurrency: 2, interval: 10, maxPerInterval: 3 },
-	// Add other site-specific configs here
 };
 
 const tgQueue = new Queue({
@@ -45,12 +44,12 @@ const scheduler = new Scheduler(
 	telegramService,
 	{
 		kufar: Kufar_Fetcher,
-		// Add other fetcher classes here
+		//add other fetcher classes here
 	},
 	{
 		kufar_re: Kufar_RealEstateUrlProcessor,
 		kufar_phone: Kufar_PhoneUrlProcessor,
-		// Add other processor classes here
+		//add other processor classes here
 	},
 	queueConfigs
 );

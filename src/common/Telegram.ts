@@ -22,7 +22,6 @@ export class TelegramService {
 	) {
 		this.bot = new TelegramBot(config.botToken, { polling: false });
 
-		// Use destructuring with default values
 		const { maxRetries = 5, retryDelay = 100 } = config;
 
 		this.maxRetries = maxRetries;
@@ -78,8 +77,6 @@ export class TelegramService {
 	private async sendMediaGroup(media: TelegramBot.InputMedia[], chatId: string): Promise<void> {
 			const chunk = media.slice(0, 10); // Telegram allows max 10 media per group
 			const lastChunk = chunk[chunk.length - 1];
-			// lastChunk.caption = lastChunk?.caption?.slice(0, 1200)
-			// console.log(lastChunk)
 			try {
 				await this.sendMessageWithRetry(chatId, chunk);
 			} catch (error) { //todo add retry invalid media
@@ -144,7 +141,6 @@ export class TelegramService {
 	}
 }
 
-// Factory function to create the Telegram service
 export function createTelegramService(config: TelegramServiceConfig, logger: ILogger, queue: Queue): TelegramService {
 	return new TelegramService(config, logger, queue);
 }

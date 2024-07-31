@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-// Define the structure for refs
 type RefValue = {
 	variation_id: number;
 	name: string;
@@ -57,7 +56,6 @@ type RefValue = {
 	grouping?: any
 };
 
-// Define the structure for rules
 type Rule = {
 	rule: {
 		category?: string;
@@ -66,7 +64,6 @@ type Rule = {
 	refs: string[];
 };
 
-// Define the structure for subcategories
 type Subcategory = {
 	id: string;
 	parent: string;
@@ -93,7 +90,6 @@ for (const category of categories) {
         categoryMap[category.name][subcategory.id] = subcategory.name;
     }
 }
-// Function to process a single category
 function processCategory(categoryName: string, refs: { [key: string]: RefValue }, rules: Rule[]) {
     const result: {
         [key: string]: {
@@ -108,7 +104,6 @@ function processCategory(categoryName: string, refs: { [key: string]: RefValue }
         }
     } = {};
 
-    // Gather subcategory IDs for the current category
     // Gather subcategory IDs and names for the current category
     const subcategoryMap = categoryMap[categoryName] || {};
     const subcategoryIds = Object.keys(subcategoryMap);
@@ -127,9 +122,6 @@ function processCategory(categoryName: string, refs: { [key: string]: RefValue }
             }
             applyRefsToSubcategory(result, subcategoryName, obj.refs, refs);
         } else {
-            // Handle rules without a category, apply to all subcategories of the current category
-            // console.log(subcategoryIds,categoryMap)
-            // process.exit()
             for (const subcategoryId of subcategoryIds) {
                 const subcategoryName = subcategoryMap[subcategoryId];
                 if (subcategoryName) {
@@ -201,7 +193,6 @@ async function processAllCategories() {
     return finalResult;
 }
 
-// Main execution
 (async () => {
     const result = await processAllCategories();
     

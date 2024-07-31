@@ -22,20 +22,15 @@ export class FileDatabase implements IDatabase {
 
   async connect(): Promise<void> {
     try {
-      // Open file for reading and writing, create it if it doesn't exist
 	//   const filePath = this.filePath || path.resolve(__dirname, '../db.json');
       const fileHandle = await fs.open(this.filePath, 'a+');
       
-      // Read the entire file content
       const data = await fileHandle.readFile('utf-8');
       
-      // Close the file
       await fileHandle.close();
 
-      // Parse the data (if empty, use an empty array)
       const ads: IDbItem[] = data.trim() ? JSON.parse(data) : [];
 
-      // Populate the cache
       for (const ad of ads) {
         this.cache.set(ad.id, ad);
       }
@@ -82,7 +77,6 @@ export class FileDatabase implements IDatabase {
   }
 }
 
-// Factory function to create the database
 export function createFileDatabase(options:FileDbOptions): IDatabase {
   return new FileDatabase(options);
 }

@@ -1,17 +1,17 @@
-import type { AdParameter, InnerCategory, MainCategory, SubCategory } from "./meta/test2_generics";
+import type { AdParameter, MainCategory, SubCategory } from "./meta/test2_generics";
 
-export interface IKufarAdsResponse<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> {
-    ads: IKufarAd<T, U, V>[];
+export interface IKufarAdsResponse<T extends MainCategory, U extends SubCategory<T>> {
+    ads: IKufarAd<T, U>[];
     pagination: Pagination;
     total: number;
 }
 
-export interface IKufarAd<T extends MainCategory, U extends SubCategory<T>, V extends InnerCategory<T, U>> {
+export interface IKufarAd<T extends MainCategory, U extends SubCategory<T>> {
     account_id: string;
     account_parameters: AccountParameter[];
     ad_id: number;
     ad_link: string;
-    ad_parameters:  AdParameter<T, U, V>[];
+    ad_parameters:  AdParameter<T, U>[];
     body: string | null;
     body_short: string;
     category: string;

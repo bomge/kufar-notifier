@@ -19,7 +19,7 @@ type IAdType = IKufarAd<'phones', 'Мобильные телефоны'>;
 type IAdsResponse = IKufarAdsResponse<'phones', 'Мобильные телефоны'>;
 
 //todo add generic for <IAdPhone>
-export class Kufar_PhoneUrlProcessor extends BaseUrlProcessor<IAdPhone, IAdsResponse, IAdType> {
+export class Kufar_OtherUrlProcessor extends BaseUrlProcessor<IAdPhone, IAdsResponse, IAdType> {
 
 	constructor(
 		protected adFetcher: Kufar_Fetcher<'phones', 'Мобильные телефоны'>,

@@ -7,7 +7,7 @@ import { uncaughtErrorsHanler } from "./src/common/uncaughtError"
 import { FileDatabase } from "./src/databases/file"
 import { TelegramService } from "./src/common/Telegram"
 import { Scheduler } from "./src/common/Scheduler"
-import { Kufar_PhoneUrlProcessor } from "./src/sites/kufar/Kufar_Phones_processor"
+import { Kufar_OtherUrlProcessor } from "./src/sites/kufar/Kufar_Other_processor"
 
 
 uncaughtErrorsHanler()
@@ -48,7 +48,7 @@ const scheduler = new Scheduler(
 	},
 	{
 		kufar_re: Kufar_RealEstateUrlProcessor,
-		kufar_phone: Kufar_PhoneUrlProcessor,
+		kufar_other: Kufar_OtherUrlProcessor,
 		//add other processor classes here
 	},
 	queueConfigs

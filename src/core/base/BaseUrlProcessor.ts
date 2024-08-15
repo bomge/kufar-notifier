@@ -127,7 +127,7 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 			messageContent.imgs[messageContent.imgs.length - 1].parse_mode = 'HTML';
 		}
 
-		return this.telegramService.sendMessage(messageContent);
+		return this.telegramService.sendMessage(messageContent,this.urlConfig.tgId);
 	}
 
 

@@ -51,7 +51,16 @@ export class TelegramService {
 		} else if (!content.imgs?.length) {
 			await this.sendTextMessage(content.text, chatId);
 		} else {
-			await this.sendMediaGroup(content.imgs, chatId);
+			try {
+				await this.sendMediaGroup(content.imgs, chatId);
+			} catch (error) { //! todo remove only img that broken
+				if (error.message.includes("WEBPAGE_MEDIA_EMPTY")) {
+					this.logger.warn('All media invalid, sending text only', { content });
+					await this.sendTextMessage(content.text, chatId);
+				} else {
+					throw error;
+				}
+			}
 			// } else {
 			// 	throw new Error('Invalid message content');
 		}

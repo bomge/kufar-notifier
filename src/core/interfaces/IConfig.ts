@@ -10,7 +10,8 @@ export interface UrlConfig {
 	prefix: string,
 	imgСount?: number,
 	onlyWithPhoto?: boolean
-	type: 're' | 'car' | 'other'
+	type: 're' | 'car' | 'other' | 'phone'
+	tgId?: string
 }
 
 export interface TelegramServiceConfig {

@@ -104,6 +104,9 @@ export class Queue<T = void> { //todo mb add sleep after completion task
     destroy(): void {
         this.clear();
         this.pause();
+
+        this.running = 0;
+        this.processedInInterval = 0;
     }
 }
 

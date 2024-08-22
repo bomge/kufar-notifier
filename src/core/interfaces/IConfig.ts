@@ -1,3 +1,5 @@
+import type { QueueOptions } from "../../common/Queue";
+
 interface AdSite {
 	enabled: boolean;
 	urls: UrlConfig[];
@@ -20,7 +22,10 @@ export interface TelegramServiceConfig {
 	errorChatId: string;
 	maxRetries?: number;
 	retryDelay?: number;
-  }
+}
+
+export type queueConfigsType = { [key: string]: Omit<QueueOptions, 'logger'> }
+
 
 export interface IConfig {
 	telegram: TelegramServiceConfig,
@@ -39,6 +44,11 @@ export interface IConfig {
 		[siteName: string]: AdSite
 	}
 	//maxRetries and retryDelay
+	server: {
+		enabled: boolean | 0 | 1;
+		port: number;
+	};
+	queues: queueConfigsType
 }
 
 

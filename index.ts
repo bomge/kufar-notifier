@@ -8,6 +8,8 @@ import { FileDatabase } from "./src/databases/file"
 import { TelegramService } from "./src/common/Telegram"
 import { Scheduler } from "./src/common/Scheduler"
 import { Kufar_OtherUrlProcessor } from "./src/sites/kufar/Kufar_Other_processor"
+import type { queueConfigsType } from "./src/core/interfaces/IConfig"
+import { createServer } from "./src/server/server"
 
 
 uncaughtErrorsHanler()
@@ -22,11 +24,10 @@ const db = new FileDatabase({
 	logger: logger.child({ name: 'FileDB' })
 })
 
-type queueConfigsType = {[key: string]:Omit< QueueOptions, 'logger'> }
 
-const queueConfigs:queueConfigsType = { //add types
+const queueConfigs: queueConfigsType = { //add types
 	default: { concurrency: 2, interval: 10, maxPerInterval: 5 },
-	kufar: { concurrency: 2, interval: 5, maxPerInterval: 3 },
+	kufar: { concurrency: 2, interval: 10, maxPerInterval: 3 },
 	telegram: { concurrency: 2, interval: 10, maxPerInterval: 3 },
 };
 
@@ -54,4 +55,27 @@ const scheduler = new Scheduler(
 	queueConfigs
 );
 
+let server: ReturnType<typeof createServer> | null = null;
+if (config.server.enabled) {
+	server = createServer(config, scheduler, logger);
+	server.start();
+}
+
 scheduler.start();
+
+
+
+process.on('SIGINT', async () => {
+	logger.info('Received SIGINT. Shutting down gracefully...');
+	
+	scheduler.stop();
+	logger.info('Scheduler stopped');
+  
+	if (server) {
+	  await server.stop();
+	  logger.info('Server stopped');
+	}
+  
+	logger.info('Shutdown complete');
+	process.exit(0);
+  });

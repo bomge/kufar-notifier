@@ -107,9 +107,14 @@ class LoggerService implements ILogger {
     this.logWithMetadata('warn', message, meta);
   }
 
+  // error(message: string, meta?: object, error?: any): void {
+  //   this.logWithMetadata('error', message, { ...meta, error }); //! redo this (error) if we pass error in meta but not as 3rd arg, it will be overrided to empty
+  // }
+
   error(message: string, meta?: object, error?: any): void {
-    this.logWithMetadata('error', message, { ...meta, error });
-  }
+    const errorMeta = error !== undefined ? { error } : {};
+    this.logWithMetadata('error', message, { ...meta, ...errorMeta });
+}
 
   debug(message: string, meta?: object): void {
     this.logWithMetadata('debug', message, meta);

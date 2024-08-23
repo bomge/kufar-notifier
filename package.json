@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "init": "npm install && cd web && npm install",
+    "install": "npm install && cd web && npm install",
     "script": "ts-node src/index.ts",
     "web": "cd web && npm run dev",
     "start": "concurrently \"npm run script\" \"npm run web\""

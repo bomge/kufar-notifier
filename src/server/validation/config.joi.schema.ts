@@ -1,14 +1,14 @@
 import Joi from 'joi';
 
 const urlConfigSchema = Joi.object({
-  url: Joi.string().required(),
+  url: Joi.string().uri().required(),
   enabled: Joi.alternatives().try(Joi.boolean(), Joi.number().valid(0, 1)).required(),
   checkInterval: Joi.string().pattern(/^\d+-\d+$/),
   prefix: Joi.string().required(),
   imgСount: Joi.number().integer().positive(),
   onlyWithPhoto: Joi.boolean(),
   type: Joi.string().valid('re', 'car', 'other', 'phone').required(),
-  tgId: Joi.string()
+  tgId: Joi.string().optional().allow('')
 });
 
 const adSiteSchema = Joi.object({

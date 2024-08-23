@@ -159,8 +159,16 @@ class Scheduler<T extends IAd, R, RawAdType> extends EventEmitter {
 	}
 
 	private getRandomInterval(intervalString: string): number {
-		const [min, max] = intervalString.split('-').map(Number);
-		return ((Math.random() * (max - min + 1)) + min) * 60 * 1000; // Convert to milliseconds
+		const parts = intervalString.split('-').map(Number);
+
+		if (parts.length === 2) {
+			const [min, max] = parts;
+			return ((Math.random() * (max - min + 1)) + min) * 60 * 1000; // Convert to milliseconds
+		} if (parts.length === 1) {
+			const value = parts[0];
+			return value * 60 * 1000; // Convert to milliseconds
+		}
+		throw new Error("Invalid interval string format.");
 	}
 
 
@@ -176,9 +184,9 @@ class Scheduler<T extends IAd, R, RawAdType> extends EventEmitter {
 		this.initializeProcessors();
 
 		this.start() //! do we need that?
-	  }
-	
-	  //todo also restart tg, bd,logger servicec
+	}
+
+	//todo also restart tg, bd,logger servicec
 	//   private updateServices(): void {
 	// 	// Update Logger
 	// 	this.logger = new LoggerService({
@@ -186,7 +194,7 @@ class Scheduler<T extends IAd, R, RawAdType> extends EventEmitter {
 	// 	  logLevel: this.config.logger.level,
 	// 	  logFilePath: this.config.logger.filePath
 	// 	});
-	
+
 	// 	// Update Database
 	// 	if (this.config.database.type === 'file') {
 	// 	  this.db = new FileDatabase({
@@ -194,14 +202,14 @@ class Scheduler<T extends IAd, R, RawAdType> extends EventEmitter {
 	// 	  });
 	// 	}
 	// 	// Add other database types here if needed
-	
+
 	// 	// Update TelegramService
 	// 	const tgQueue = new Queue({
 	// 	  logger: this.logger.child({ name: 'TelegramQueue' }),
 	// 	  ...this.config.queues.telegram
 	// 	});
 	// 	this.telegramService = new TelegramService(this.config.telegram, this.logger.child({ name: 'Telegram' }), tgQueue);
-	
+
 	// 	// Update queueConfigs
 	// 	this.queueConfigs = this.config.queues;
 	//   }

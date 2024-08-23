@@ -25,11 +25,12 @@ const db = new FileDatabase({
 })
 
 
-const queueConfigs: queueConfigsType = { //add types
-	default: { concurrency: 2, interval: 10, maxPerInterval: 5 },
-	kufar: { concurrency: 2, interval: 10, maxPerInterval: 3 },
-	telegram: { concurrency: 2, interval: 10, maxPerInterval: 3 },
-};
+const queueConfigs: queueConfigsType = config.queues
+// const queueConfigs: queueConfigsType = { //add types
+// 	default: { concurrency: 2, interval: 10, maxPerInterval: 5 },
+// 	kufar: { concurrency: 2, interval: 10, maxPerInterval: 3 },
+// 	telegram: { concurrency: 2, interval: 10, maxPerInterval: 3 },
+// };
 
 const tgQueue = new Queue({
 	logger: logger.child({ name: 'TelegramQueue' }),

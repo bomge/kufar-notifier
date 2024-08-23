@@ -1,15 +1,15 @@
-import Kufar_Fetcher from "./src/sites/kufar/Kufar_fetcher"
-import { Kufar_RealEstateUrlProcessor } from "./src/sites/kufar/Kufar_RealEstate_processor"
-import { config } from './config'
-import LoggerService from "./src/common/Logger"
-import { Queue, type QueueOptions } from "./src/common/Queue"
-import { uncaughtErrorsHanler } from "./src/common/uncaughtError"
-import { FileDatabase } from "./src/databases/file"
-import { TelegramService } from "./src/common/Telegram"
-import { Scheduler } from "./src/common/Scheduler"
-import { Kufar_OtherUrlProcessor } from "./src/sites/kufar/Kufar_Other_processor"
-import type { queueConfigsType } from "./src/core/interfaces/IConfig"
-import { createServer } from "./src/server/server"
+import Kufar_Fetcher from "./sites/kufar/Kufar_fetcher"
+import { Kufar_RealEstateUrlProcessor } from "./sites/kufar/Kufar_RealEstate_processor"
+import { config } from '../config'
+import LoggerService from "./common/Logger"
+import { Queue, type QueueOptions } from "./common/Queue"
+import { uncaughtErrorsHanler } from "./common/uncaughtError"
+import { FileDatabase } from "./databases/file"
+import { TelegramService } from "./common/Telegram"
+import { Scheduler } from "./common/Scheduler"
+import { Kufar_OtherUrlProcessor } from "./sites/kufar/Kufar_Other_processor"
+import type { queueConfigsType } from "./core/interfaces/IConfig"
+import { createServer } from "./server/server"
 
 
 uncaughtErrorsHanler()

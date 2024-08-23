@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "init": "npm install && cd web && npm install",
+    "script": "ts-node src/index.ts",
+    "web": "cd web && npm run dev",
+    "start": "concurrently \"npm run script\" \"npm run web\""
+  },
   "dependencies": {
     "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
@@ -13,6 +19,7 @@
   "devDependencies": {
     "@logtail/pino": "^0.4.22",
     "@types/node-telegram-bot-api": "^0.64.7",
+    "concurrently": "^8.2.2",
     "pino-pretty": "^11.2.2",
     "ts-node": "^10.9.2"
   }

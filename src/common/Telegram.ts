@@ -4,6 +4,18 @@ import type { Queue } from './Queue';
 import { sleep } from '../utils/util';
 import type { TelegramServiceConfig } from '../core/interfaces/IConfig';
 
+interface TelegramError extends Error {
+	code: string;
+	response: {
+		body: {
+			error_code: number;
+			description: string;
+			parameters?: {
+				retry_after?: number;
+			};
+		};
+	};
+}
 
 export type MessageContent = {
 	text: string
@@ -44,25 +56,27 @@ export class TelegramService {
 
 
 	private async processMessage(content: MessageContent, chatId: string): Promise<void> {
-		this.logger.debug('sending tg message',{content,chatId})
+		const _logger = this.logger.child({ content, chatId })
+		_logger.debug('sending tg message',)
 		if (typeof content === 'string') {
 			await this.sendTextMessage(content, chatId);
 		} else if (!content.imgs?.length) {
 			await this.sendTextMessage(content.text, chatId);
 		} else {
-			try {
-				await this.sendMediaGroup(content.imgs, chatId);
-			} catch (error) { //! todo remove only img that broken
-				if (error.message.includes("WEBPAGE_MEDIA_EMPTY")) {
-					this.logger.warn('All media invalid, sending text only', { content });
-					await this.sendTextMessage(content.text, chatId);
-				} else {
-					throw error;
-				}
-			}
+			// try {
+			await this.sendMediaGroup(content.imgs, chatId);
+			// } catch (error) { //! todo remove only img that broken
+			// 	if (error.message.includes("WEBPAGE_MEDIA_EMPTY")) {
+			// 		this.logger.warn('All media invalid, sending text only', { content });
+			// 		await this.sendTextMessage(content.text, chatId);
+			// 	} else {
+			// 		throw error;
+			// 	}
+			// }
 			// } else {
 			// 	throw new Error('Invalid message content');
 		}
+		_logger.debug('sent tg message successfully',)
 	}
 
 	private async sendTextMessage(message: string, chatId: string): Promise<void> {
@@ -75,20 +89,22 @@ export class TelegramService {
 	}
 
 	private async sendMediaGroup(media: TelegramBot.InputMedia[], chatId: string): Promise<void> {
-			const chunk = media.slice(0, 10); // Telegram allows max 10 media per group
-			const lastChunk = chunk[chunk.length - 1];
-			try {
-				await this.sendMessageWithRetry(chatId, chunk);
-			} catch (error) { //todo add retry invalid media
-				//@ts-ignore
-				if (error.code === 'MEDIA_INVALID') {
-				//@ts-ignore
-				this.logger.warn('Invalid media detected, removing from the group', { mediaGroup: chunk });
-					media = media.filter(item => !chunk.includes(item));
-				} else {
-					throw error;
-				}
-			}
+		const chunk = media.slice(0, 10); // Telegram allows max 10 media per group
+		const lastChunk = chunk[chunk.length - 1];
+		// try {
+			await this.sendMessageWithRetry(chatId, chunk);
+		// } catch (error) { //todo add retry invalid media
+		// 	//!wrong error.code. Fix somehow later
+		// 	//@ts-ignore
+		// 	const telegramError = error as TelegramError;
+		// 	if (error.code === 'MEDIA_INVALID') {
+		// 		//@ts-ignore
+		// 		this.logger.warn('Invalid media detected, removing from the group', { mediaGroup: chunk });
+		// 		media = media.filter(item => !chunk.includes(item));
+		// 	} else {
+		// 		throw error;
+		// 	}
+		// }
 	}
 
 	private async sendMessageWithRetry(chatId: string, content: string | TelegramBot.InputMedia[], retryCount = 0): Promise<void> {
@@ -99,25 +115,42 @@ export class TelegramService {
 				await this.bot.sendMessage(chatId, content, { parse_mode: 'HTML' });
 			}
 		} catch (error) {
-			//@ts-ignore
-			this.logger.error('got error while sending tg message '+ error?.message,{error,chatId,content},error)
-			if (this.shouldRetry(error, retryCount)) {
-				const delay = this.getRetryDelay(error);
-				this.logger.warn(`Rate limit hit, retrying in ${delay / 1000} seconds...`);
+			const telegramError = error as TelegramError;
+			const err_logger = this.logger.child({ error: telegramError, chatId, content })
+			err_logger.error('Got error while sending TG message: ' + telegramError.message);
+
+			if (Array.isArray(content) && this.isWebpageMediaEmptyError(telegramError)) {
+				const updatedContent = this.removeProblematicMedia(content, telegramError);
+				if (updatedContent.length > 0) {
+					err_logger.warn('Removed problematic media, retrying with updated content', { updatedContent });
+					return this.sendMessageWithRetry(chatId, updatedContent, retryCount);
+				} else {
+					throw new Error('All media items were removed due to WEBPAGE_MEDIA_EMPTY errors');
+				}
+			}
+
+			if (this.shouldRetry(telegramError, retryCount)) {
+				const delay = this.getRetryDelay(telegramError);
+				err_logger.warn(`Rate limit hit, retrying in ${delay / 1000} seconds...`);
 				await sleep(delay);
-				await this.sendMessageWithRetry(chatId, content, retryCount + 1);
+				err_logger.warn(`slept ${delay / 1000} trying to resend...`);
+				return await this.sendMessageWithRetry(chatId, content, retryCount + 1);
 			} else {
-				throw error;
+				throw telegramError;
 			}
 		}
 	}
 
-	private shouldRetry(error: any, retryCount: number): boolean {
-		return error.code === 429 && retryCount < this.maxRetries;
+	private isWebpageMediaEmptyError(error: TelegramError): boolean {
+		return error.message.includes('WEBPAGE_MEDIA_EMPTY');
 	}
 
-	private getRetryDelay(error: any): number {
-		return (error.parameters?.retry_after || 1) * 1000 + this.retryDelay;
+	private shouldRetry(error: TelegramError, retryCount: number): boolean {
+		return error.response?.body?.error_code === 429 && retryCount < this.maxRetries;
+	}
+
+	private getRetryDelay(error: TelegramError): number {
+		return (error.response?.body?.parameters?.retry_after || 1) * 1000 + this.retryDelay;
 	}
 
 	private splitLongMessage(message: string, maxLength: number = 4096): string[] {
@@ -138,6 +171,36 @@ export class TelegramService {
 		}
 
 		return chunks;
+	}
+
+
+	private removeProblematicMedia(content: TelegramBot.InputMedia[], error: TelegramError): TelegramBot.InputMedia[] {
+		const errorMatch = error.message.match(/failed to send message #(\d+)/);
+		if (errorMatch) {
+			const problematicIndex = Number.parseInt(errorMatch[1]) - 1; // Convert to 0-based index
+			if (problematicIndex >= 0 && problematicIndex < content.length) {
+				this.logger.warn(`Removing problematic media at index ${problematicIndex}`);
+
+				// Store the caption of the last media if it's being removed
+				const lastMediaCaption = problematicIndex === content.length - 1 ? content[problematicIndex].caption : undefined;
+
+				// Remove the problematic media
+				const updatedContent = content.filter((_, index) => index !== problematicIndex);
+
+				// If we removed the last media and it had a caption, add it to the new last media
+				if (lastMediaCaption && updatedContent.length > 0) {
+					const newLastMedia = updatedContent[updatedContent.length - 1];
+					newLastMedia.caption = lastMediaCaption;
+					// If the media type supports parse_mode, set it to HTML
+					// if ('parse_mode' in newLastMedia) {
+					// 	newLastMedia.parse_mode = 'HTML';
+					// }
+				}
+
+				return updatedContent;
+			}
+		}
+		return content;
 	}
 }
 

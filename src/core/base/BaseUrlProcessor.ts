@@ -38,7 +38,9 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 			const formattedAds = allAds.map(this.formatAd)
 			const ads = sortByField(formattedAds, 'description_full');
 
-			await Promise.all(ads.map(ad => this.processAd(ad)));
+			//todo add optional param await all ads before start new check, or n
+			// await Promise.all(ads.map(ad => this.processAd(ad)));
+			Promise.all(ads.map(ad => this.processAd(ad)));
 		} catch (error) {
 			this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
 			await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);
@@ -120,7 +122,7 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 		const text = await this.formatAdMessage(ad, priceChange);
 		const messageContent: MessageContent = { text };
 
-		if (ad.images) {
+		if (ad.images?.length) {
 			const first_n_img = ad.images.slice(0, this.imgCount);
 			messageContent.imgs = first_n_img.map(a => ({ type: 'photo', media: a }));
 			messageContent.imgs[messageContent.imgs.length - 1].caption = text;

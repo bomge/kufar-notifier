@@ -39,8 +39,8 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 			const ads = sortByField(formattedAds, 'description_full');
 
 			//todo add optional param await all ads before start new check, or n
-			// await Promise.all(ads.map(ad => this.processAd(ad)));
-			Promise.all(ads.map(ad => this.processAd(ad)));
+			await Promise.all(ads.map(ad => this.processAd(ad)));
+			// Promise.all(ads.map(ad => this.processAd(ad)));
 		} catch (error) {
 			this.logger.error(`Error processing ads for ${this.urlConfig.prefix}`, this.urlConfig, error);
 			await this.telegramService.sendError(`Error processing ads for ${this.urlConfig.prefix}: ${error.message}`);

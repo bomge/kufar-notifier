@@ -34,7 +34,7 @@ export class TelegramService {
 	) {
 		this.bot = new TelegramBot(config.botToken, { polling: false });
 
-		const { maxRetries = 5, retryDelay = 100 } = config;
+		const { maxRetries = 5, retryDelay = 1000 } = config;
 
 		this.maxRetries = maxRetries;
 		this.retryDelay = retryDelay;

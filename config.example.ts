@@ -9,7 +9,6 @@ export const config: IConfig = {
   "defaultImgCount": 3,
   "logger": {
     "level": "debug",
-    "remoteUrl": "TOKEN"
   },
   "telegram": {
     "defaultChatId": "XXXXXXX",
@@ -22,7 +21,7 @@ export const config: IConfig = {
       "urls": [
         {
           "prefix": "kufar",
-          "enabled": 1,
+          "enabled": 0,
           "type": "re",
           "url": "https://cre-api-v2.kufar.by/items-search/v1/engine/v1/search/rendered-paginated?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
           "checkInterval": "1-3",

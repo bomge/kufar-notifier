@@ -7,7 +7,7 @@ import { Notifications } from '@mantine/notifications';
 export default function App() {
 
 
-  return <MantineProvider theme={theme}>
+  return <MantineProvider defaultColorScheme="light" forceColorScheme="light">
     <AppShell
       padding="md"
       header={

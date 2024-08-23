@@ -1,5 +1,6 @@
 import express from 'express';
 import http from 'node:http';
+import cors from 'cors';
 import type { IConfig } from '../core/interfaces/IConfig';
 import type { Scheduler } from '../common/Scheduler';
 import type { ILogger } from '../core/interfaces/ILogger';
@@ -11,7 +12,7 @@ export function createServer(config: IConfig, scheduler: Scheduler<any, any, any
   const app = express();
   const server = http.createServer(app);
   const serverLogger = logger.child({ name: 'Server' });
-
+  app.use(cors());
   app.use(express.json());
 
   app.get('/api/config', (req, res) => {
@@ -22,7 +23,7 @@ export function createServer(config: IConfig, scheduler: Scheduler<any, any, any
   app.post('/api/config', async (req, res) => {
     serverLogger.info('POST /api/config',{req});
 
-    const { error, value } = await validateConfig(req.body);
+    const { error, value } = await validateConfig(req.body);//todo validation as middleware
     
     if (error) {
       serverLogger.warn('Invalid config received', { error: error.details, body:req.body });

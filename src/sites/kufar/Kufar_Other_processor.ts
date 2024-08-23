@@ -64,17 +64,20 @@ export class Kufar_OtherUrlProcessor extends BaseUrlProcessor<IAdPhone, IAdsResp
 
 	protected async formatAdMessage(ad: IAdPhone, priceChange?: PriceChange): Promise<string> {
 		const priceChangeStatus = this.formatPriceChangeStatus(priceChange);
-		const priceChangeStatusText = priceChangeStatus? priceChangeStatus + '\n' : '';
-		const { adress_text, price_text, shopAdText } = this.getFormatingTexts(ad);
+		const priceChangeStatusText = priceChangeStatus? priceChangeStatus + '\n': '';
+		let { adress_text, price_text, shopAdText } = this.getFormatingTexts(ad);
 		const description = await this.adFetcher.getFullDescription(ad);
 
+		if(priceChangeStatusText){
+			price_text=''
+		}
 
 		return `${format.bold(this.urlConfig.prefix)} ` + '\n'
 			+ `${format.italic(format.underline(ad.subject))} ${ad.condition}` + '\n'
 			+ priceChangeStatusText
 			+ shopAdText
 			// + adress_text + '\n'
-			+ price_text + '\n'
+			+ price_text
 			+ ad.link + '\n'
 			+ format.monospace(description);
 	}
@@ -86,6 +89,8 @@ export class Kufar_OtherUrlProcessor extends BaseUrlProcessor<IAdPhone, IAdsResp
 		if (!+price_byn && !+price_usd) {
 			price_text = 'договорная цена'
 		}
+
+		price_text+='\n'
 
 		const adress_text = (adress || shop_address) + '\n'
 

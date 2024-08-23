@@ -115,7 +115,9 @@ export abstract class BaseUrlProcessor<T extends IAd, R, RawAdType>   {
 		const usdChange = formatChange(change.changeUSD, usdSign, 'USD');
 
 		return `Изменение: ${bynChange} ${usdChange}\n` +
-			`Старая цена: ${formatPrice(change.oldPriceBYN)}руб.  ${formatPrice(change.oldPriceUSD)}$`;
+			`Новая цена: ${formatPrice(change.newPriceBYN)}руб.  ${formatPrice(change.newPriceUSD)}$\n` +
+			`Старая цена: ${formatPrice(change.oldPriceBYN)}руб.  ${formatPrice(change.oldPriceUSD)}$`
+			//+ '\n'
 	}
 
 	private async notifyTelegram(ad: IAd, priceChange?: PriceChange): Promise<void> {

@@ -66,14 +66,17 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate
 
 	protected async formatAdMessage(ad: IAdRealEstate, priceChange?: PriceChange): Promise<string> {
 		const priceChangeStatus = this.formatPriceChangeStatus(priceChange);
-
-		const { adress_text, floor_text, price_text, room_area_text, who_can_rent_text } = this.getFormatingTexts(ad);
+		let { adress_text, floor_text, price_text, room_area_text, who_can_rent_text } = this.getFormatingTexts(ad);
 		const description = await this.adFetcher.getFullDescription(ad);
 
+		if(priceChangeStatus){
+			// priceChangeStatus+= '\n' + price_text.replace('\n', '');
+			price_text=''
+		}
 
 		return `${format.bold(this.urlConfig.prefix)} ` + priceChangeStatus + '\n'
 			+ adress_text + room_area_text + '\n'
-			+ price_text + '\n'
+			+ price_text
 			+ floor_text
 			+ who_can_rent_text
 			+ ad.link + '\n'
@@ -87,6 +90,7 @@ export class Kufar_RealEstateUrlProcessor extends BaseUrlProcessor<IAdRealEstate
 		if (!+price_byn && !+price_usd) {
 			price_text = 'договорная цена'
 		}
+		price_text+='\n'
 
 		let area_text = ''
 		if (size) {
